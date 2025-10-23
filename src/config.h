@@ -53,6 +53,7 @@ extern struct RENDER_OPTIONS {
 	int invert_y;
 	int smooth_fog;
 	float camera_fov;
+	float aim_fov;
 	int hold_down_sights;
 	int chat_shadow;
 } settings, settings_tmp;

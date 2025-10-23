@@ -1285,7 +1285,7 @@ static void hud_ingame_mouselocation(double x, double y) {
 	float s = 1.0F;
 	if(camera_mode == CAMERAMODE_FPS && players[local_player_id].held_item == TOOL_GUN
 	   && players[local_player_id].input.buttons.rmb) {
-		s = 0.5F;
+		s = settings.aim_fov / settings.camera_fov;
 	}
 
 	if(settings.invert_y)

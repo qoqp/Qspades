@@ -85,6 +85,7 @@ void config_save() {
 	config_seti("client", "smooth_fog", settings.smooth_fog);
 	config_seti("client", "ambient_occlusion", settings.ambient_occlusion);
 	config_setf("client", "camera_fov", settings.camera_fov);
+	config_setf("client", "aim_fov", settings.aim_fov);
 	config_seti("client", "hold_down_sights", settings.hold_down_sights);
 	config_seti("client", "chat_shadow", settings.chat_shadow);
 	config_seti("client", "show_player_arms", settings.player_arms);
@@ -156,6 +157,8 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.ambient_occlusion = atoi(value);
 		} else if(!strcmp(name, "camera_fov")) {
 			settings.camera_fov = fmax(fmin(atof(value), CAMERA_MAX_FOV), CAMERA_DEFAULT_FOV);
+		} else if(!strcmp(name, "aim_fov")) {
+			settings.aim_fov = fmax(fmin(atof(value), CAMERA_MAX_FOV), CAMERA_DEFAULT_FOV);
 		} else if(!strcmp(name, "hold_down_sights")) {
 			settings.hold_down_sights = atoi(value);
 		} else if(!strcmp(name, "chat_shadow")) {
@@ -422,6 +425,15 @@ void config_reload() {
 				 .name = "Camera FOV",
 				 .help = "Field of View in degrees",
 			 });
+	list_add(&config_settings,
+				&(struct config_setting) {
+					.value = &settings_tmp.aim_fov,
+					.type = CONFIG_TYPE_FLOAT,
+					.min = CAMERA_DEFAULT_FOV,
+					.max = CAMERA_MAX_FOV,
+					.name = "Aim FOV",
+					.help = "Aim Field of View in degrees",
+				});
 	list_add(&config_settings,
 			 &(struct config_setting) {
 				 .value = &settings_tmp.volume,
