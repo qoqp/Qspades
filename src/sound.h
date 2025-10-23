@@ -98,6 +98,9 @@ extern struct Sound_wav sound_debris;
 extern struct Sound_wav sound_bounce;
 extern struct Sound_wav sound_impact;
 
+extern struct Sound_wav sound_hitmarker;
+extern struct Sound_wav sound_hitmarker_head;
+
 void sound_volume(float vol);
 void sound_create_sticky(struct Sound_wav* w, struct Player* player, int player_id);
 void sound_create(enum sound_space option, struct Sound_wav* w, float x, float y, float z);
