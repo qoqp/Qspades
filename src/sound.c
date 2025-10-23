@@ -320,7 +320,7 @@ void sound_init() {
 	sound_load(&sound_bounce, "wav/bounce.wav", 0.1F, 32.0F);
 	sound_load(&sound_impact, "wav/impact.wav", 0.1F, 53.0F);
 
-    sound_load(&sound_hitmarker, "wav/hitmarker.wav", 0.1F, 45.0F);
-    sound_load(&sound_hitmarker_head, "wav/headshot.wav", 0.1F, 45.0F);
+    sound_load(&sound_hitmarker, "wav/hitmarker.wav", 0.1F, 75.0F);
+    sound_load(&sound_hitmarker_head, "wav/headshot.wav", 0.1F, 75.0F);
 #endif
 }

@@ -1,1 +1,4 @@
-cmake -G "Unix Makefiles"
+cmake -DCMAKE_BUILD_TYPE=Release -S ../betterspades -B ../betterspades/build
+cmake --build ../betterspades/build
+
+when in doubt, delete the build folder's contents
