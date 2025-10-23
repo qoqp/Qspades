@@ -128,8 +128,8 @@ src/clean: _deps/vxl-build/clean
 # Target rules for target src/CMakeFiles/client.dir
 
 # All Build rule for target.
-src/CMakeFiles/client.dir/all: _deps/vxl-build/CMakeFiles/vxl.dir/all
 src/CMakeFiles/client.dir/all: _deps/cglm-build/CMakeFiles/cglm.dir/all
+src/CMakeFiles/client.dir/all: _deps/vxl-build/CMakeFiles/vxl.dir/all
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/client.dir/build.make src/CMakeFiles/client.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/client.dir/build.make src/CMakeFiles/client.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/mylinux/betterspades/CMakeFiles --progress-num=35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73 "Built target client"

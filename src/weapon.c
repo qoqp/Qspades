@@ -263,6 +263,8 @@ void weapon_shoot() {
 			hit.type = CAMERA_HITTYPE_NONE;
 		switch(hit.type) {
 			case CAMERA_HITTYPE_PLAYER: {
+                printf("is the build even working?");
+                sound_create(SOUND_LOCAL, (hit.player_section == HITTYPE_HEAD) ? &sound_hitmarker_head : &sound_hitmarker, 0.0F, 0.0F, 0.0F);
 				sound_create_sticky((hit.player_section == HITTYPE_HEAD) ? &sound_spade_whack : &sound_hitplayer,
 									players + hit.player_id, hit.player_id);
 				particle_create(0x0000FF, players[hit.player_id].physics.eye.x,
