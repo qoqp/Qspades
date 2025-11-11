@@ -93,7 +93,7 @@ void drawScene() {
 
 	matrix_upload();
 	chunk_draw_visible();
-
+	
 	if(settings.smooth_fog) {
 #ifdef OPENGL_ES
 		glFogx(GL_FOG_MODE, GL_EXP2);
@@ -695,6 +695,10 @@ int main(int argc, char** argv) {
 	settings.invert_y = 0;
 	settings.smooth_fog = 0;
 	settings.camera_fov = CAMERA_DEFAULT_FOV;
+	settings.brightness = 1.0f;
+	settings.sharpening = 0.0f;
+	settings.saturation = 1.0f;
+	settings.contrast = 1.0f;
 	strcpy(settings.name, "DEV_CLIENT");
 
 #ifdef USE_TOUCH

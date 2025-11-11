@@ -56,6 +56,10 @@ extern struct RENDER_OPTIONS {
 	float aim_fov;
 	int hold_down_sights;
 	int chat_shadow;
+	float brightness;
+	float sharpening;
+	float saturation;
+	float contrast;
 } settings, settings_tmp;
 
 extern struct list config_keys;

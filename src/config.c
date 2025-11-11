@@ -89,6 +89,12 @@ void config_save() {
 	config_seti("client", "hold_down_sights", settings.hold_down_sights);
 	config_seti("client", "chat_shadow", settings.chat_shadow);
 	config_seti("client", "show_player_arms", settings.player_arms);
+	//color correction
+	config_setf("client", "brightness", settings.brightness);
+	config_setf("client", "sharpening", settings.sharpening);
+	config_setf("client", "saturation", settings.saturation);
+	config_setf("client", "contrast", settings.contrast);
+	config_setf("client", "apply_color_correction", settings.color_correction);
 
 	for(int k = 0; k < list_size(&config_keys); k++) {
 		struct config_key_pair* e = list_get(&config_keys, k);
@@ -165,6 +171,16 @@ static int config_read_key(void* user, const char* section, const char* name, co
 			settings.chat_shadow = atoi(value);
 		} else if(!strcmp(name, "show_player_arms")) {
 			settings.player_arms = atoi(value);
+		} else if(!strcmp(name, "brightness")) {
+			settings.brightness = atof(value);
+		} else if(!strcmp(name, "sharpening")) {
+			settings.sharpening = atof(value);
+		} else if(!strcmp(name, "saturation")) {
+			settings.saturation = atof(value);
+		} else if(!strcmp(name, "contrast")) {
+			settings.contrast = atof(value);
+		} else if(!strcmp(name, "apply_color_correction")) {
+			settings.color_correction = atoi(value);
 		}
 	}
 	if(!strcmp(section, "controls")) {
@@ -608,5 +624,50 @@ void config_reload() {
 				 .max = 1,
 				 .name = "Show news",
 				 .help = "Show news on server list",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.brightness,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0.0f,
+				 .max = 2.0f,
+				 .name = "Brightness",
+				 .help = "MY EYES!!",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.sharpening,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0.0f,
+				 .max = 2.0f,
+				 .name = "Sharpening",
+				 .help = "openspades has it..",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.saturation,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0.0f,
+				 .max = 2.0f,
+				 .name = "Saturation",
+				 .help = "Turn this one all the way up",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.contrast,
+				 .type = CONFIG_TYPE_FLOAT,
+				 .min = 0.0f,
+				 .max = 2.0f,
+				 .name = "Contrast",
+				 .help = "Make everything more contrasty",
+			 });
+	list_add(&config_settings,
+			 &(struct config_setting) {
+				 .value = &settings_tmp.color_correction,
+				 .type = CONFIG_TYPE_INT,
+				 .min = 0,
+				 .max = 1,
+				 .name = "Color Correction",
+				 .help = "Make changes to the final colors",
 			 });
 }
