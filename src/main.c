@@ -218,7 +218,7 @@ void drawScene() {
 void display() {
 	if (pp == true) {
 		//bind the custom framebuffer
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); //FBO
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO); //FBO
 	}
 
 	if(network_map_transfer) {
@@ -517,7 +517,7 @@ void display() {
 	if(settings.multisamples > 0)
 		glEnable(GL_MULTISAMPLE);
 
-	//framebuffer_render();
+	framebuffer_render();
 }
 
 void init() {
@@ -576,6 +576,9 @@ void init() {
 }
 
 void framebuffer_render(){
+	//disable culling 
+	glDisable(GL_CULL_FACE);
+
 	//bind the default framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -583,11 +586,20 @@ void framebuffer_render(){
 	glUseProgram(framebufferProgram);
 	glBindVertexArray(rectVAO);
 	glDisable(GL_DEPTH_TEST);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
 	glUniform1i(glGetUniformLocation(framebufferProgram, "screenTexture"), 0);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	//
+	//unbind stuff
+	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glUseProgram(0);
+
+	//enable culling
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 }
 
 void framebuffer_init(){
@@ -617,8 +629,9 @@ void framebuffer_init(){
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-	/*
+	
 	//create framebuffer texture
+	glActiveTexture(GL_TEXTURE0);
 	glGenTextures(1, &framebufferTexture);
 	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -628,6 +641,7 @@ void framebuffer_init(){
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
 
+	
 	//create render buffer object
 	glGenRenderbuffers(1, &RBO);
 	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
@@ -654,7 +668,7 @@ void framebuffer_init(){
 
 			"void main(void) {\n"
 			"	gl_Position = vec4(inPos.x, inPos.y, 0.0, 1.0);\n"
-			"	texCoords = inTexcoords;\n"
+			"	texCoords = inTexCoords;\n"
 			"}\n",
 
 			//fragment
@@ -688,7 +702,7 @@ void framebuffer_init(){
 			"		color += vec3(texture(screenTexture, texCoords.st + offsets[i])) * kernel[i];\n"
 			"	FragColor = vec4(color, 1.0f);\n"
 			//"	FragColor = vec4(texture(screenTexture, texCoords.st), 1.0f);\n"
-			"	FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+			//"	FragColor = vec4(texCoords[0], texCoords[1], 1.0f, 1.0f);\n"
 			"}\n");
 		
 		if (framebufferProgram == 0){ //this doesnt work
@@ -702,9 +716,10 @@ void framebuffer_init(){
 	glUniform1i(glGetUniformLocation(framebufferProgram, "screenTexture"), 0);
 
 	log_info("finished init framebuffer");
-	*/
 
+	//unbind stuff
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glUseProgram(0);
 }
 
 void reshape(struct window_instance* window, int width, int height) {
