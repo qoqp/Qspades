@@ -100,19 +100,23 @@ float rectangleVertices[] =
 };
 
 //rect
-unsigned int rectVAO, rectVBO;
+unsigned int rectVAO = 0;
+unsigned int rectVBO = 0;
 
 //fbo
-unsigned int FBO;
+unsigned int FBO = 0;
 
 //fb
-unsigned int framebufferTexture;
+unsigned int framebufferTexture = 0;
 
 //rbo
-unsigned int RBO;
+unsigned int RBO = 0;
 
 //program
 static int framebufferProgram = -1;
+
+static bool framebufferExists = false;
+static bool fbRectIsSetup = false;
 
 
 
@@ -588,7 +592,11 @@ void framebuffer_render(){
 	glDisable(GL_DEPTH_TEST);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+	
+	//set shader uniforms
 	glUniform1i(glGetUniformLocation(framebufferProgram, "screenTexture"), 0);
+
+	//draw quad
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
 	//unbind stuff
@@ -603,25 +611,34 @@ void framebuffer_render(){
 }
 
 void framebuffer_init(){
-	//set up shader program
-	//Shader frameBufferProgram("framebuffer.vert", "framebuffer.frag");
+	framebufferExists = true;
 
 	width = settings.window_width;
 	height = settings.window_height;
 
-	//setup the framebuffer rectangle
-	glGenVertexArrays(1, &rectVAO);
-	glGenBuffers(1, &rectVBO);
-	glBindVertexArray(rectVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), &rectangleVertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	RBO = 0;
+	FBO = 0;
+	framebufferTexture = 0;
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	log_info("..creating framebuffer with resolution %i x %i", width, height );
+
+	//setup the framebuffer rectangle
+	if (fbRectIsSetup == false){
+		fbRectIsSetup = true;
+
+		glGenVertexArrays(1, &rectVAO);
+		glGenBuffers(1, &rectVBO);
+		glBindVertexArray(rectVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), &rectangleVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
 
 	//init post processing stuff
 
@@ -649,9 +666,9 @@ void framebuffer_init(){
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 	
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		log_info(" -- FRAMEBUFFER NOT COMPLETE");
+		log_info("..FRAMEBUFFER NOT COMPLETE");
 	else{
-		log_info(" -- framebuffer is complete");
+		//log_info("..framebuffer is complete");
 	}
 
 	//shader
@@ -679,7 +696,12 @@ void framebuffer_init(){
 			"uniform sampler2D screenTexture;\n"
 			
 			"const float offset_x = 1.0f / 800.0f;\n"
-			"const float offset_y = 1.0f / 800.0f;\n"  
+			"const float offset_y = 1.0f / 800.0f;\n" 
+			
+			"const float brightness = 1.0f\n"
+			"const float contrast = 1.0f\n"
+			"const float saturation = 1.0f\n"
+			"const float sharpness = 1.0f\n"
 			
 			"vec2 offsets[9] = vec2[]\n"
 			"(\n"
@@ -700,9 +722,10 @@ void framebuffer_init(){
 			"	vec3 color = vec3(0.0f);\n"
 			"	for(int i = 0; i < 9; i++)\n"
 			"		color += vec3(texture(screenTexture, texCoords.st + offsets[i])) * kernel[i];\n"
+			
+			//"	color = texture(screenTexture, texCoords.st).rgb;\n"
 			"	FragColor = vec4(color, 1.0f);\n"
-			//"	FragColor = vec4(texture(screenTexture, texCoords.st), 1.0f);\n"
-			//"	FragColor = vec4(texCoords[0], texCoords[1], 1.0f, 1.0f);\n"
+			//"	FragColor = vec4(texCoords[0], texCoords[1], 0.0f, 1.0f);\n"
 			"}\n");
 		
 		if (framebufferProgram == 0){ //this doesnt work
@@ -722,7 +745,25 @@ void framebuffer_init(){
 	glUseProgram(0);
 }
 
+void framebuffer_delete(){
+	if (framebufferExists == false){
+		return;
+	}
+
+	log_info("..deleting framebuffer");
+
+	glDeleteFramebuffers(1, &FBO);
+	glDeleteTextures(1, &framebufferTexture);
+
+	glDeleteRenderbuffers(1, &RBO);
+
+	framebufferExists = false;
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void reshape(struct window_instance* window, int width, int height) {
+	log_info("reshaped window to resolution %i x %i", settings.window_width, settings.window_height );
 	font_reset();
 	glViewport(0, 0, width, height);
 	settings.window_width = width;
@@ -731,6 +772,9 @@ void reshape(struct window_instance* window, int width, int height) {
 		window_swapping(settings.vsync);
 	if(settings.vsync > 1)
 		window_swapping(0);
+	
+	framebuffer_delete();
+	framebuffer_init();
 }
 
 static int mu_button_translate(int button) {
@@ -944,6 +988,7 @@ int main(int argc, char** argv) {
 
 	config_reload();
 
+	log_info("creating window with resolution %i x %i", settings.window_width, settings.window_height );
 	window_init();
 
 #ifndef OPENGL_ES
