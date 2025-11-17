@@ -46,6 +46,7 @@
 #include "texture.h"
 #include "chunk.h"
 #include "main.h"
+#include "model.h"
 
 int fps = 0;
 
@@ -76,6 +77,45 @@ char chat_popup[256] = {};
 int chat_popup_color;
 float chat_popup_timer = 0.0F;
 float chat_popup_duration = 0.0F;
+
+
+
+
+//postprocessing
+bool pp = true;
+
+unsigned int width = 1024;
+unsigned int height = 768;
+
+float rectangleVertices[] =
+{
+	//coords	//texcoords
+	1.0f, -1.0f,	1.0f, 0.0f,
+	-1.0f, -1.0f,	0.0f, 0.0f,
+	-1.0f, 1.0f,	0.0f, 1.0f,
+
+	1.0f, 1.0f,		1.0f, 1.0f,
+	1.0f, -1.0f,	1.0f, 0.0f,
+	-1.0f, 1.0f,	0.0f, 1.0f
+};
+
+//rect
+unsigned int rectVAO, rectVBO;
+
+//fbo
+unsigned int FBO;
+
+//fb
+unsigned int framebufferTexture;
+
+//rbo
+unsigned int RBO;
+
+//program
+static int framebufferProgram = -1;
+
+
+
 
 void chat_showpopup(const char* msg, float duration, int color) {
 	strcpy(chat_popup, msg);
@@ -113,6 +153,7 @@ void drawScene() {
 	grenade_render();
 	map_damaged_voxels_render();
 	matrix_upload();
+	
 
 	if(gamestate.gamemode_type == GAMEMODE_CTF) {
 		if(!gamestate.gamemode.ctf.team_1_intel) {
@@ -175,10 +216,19 @@ void drawScene() {
 }
 
 void display() {
+	if (pp == true) {
+		//bind the custom framebuffer
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); //FBO
+	}
+
 	if(network_map_transfer) {
 		glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 	} else {
 		glClearColor(fog_color[0], fog_color[1], fog_color[2], fog_color[3]);
+	}
+
+	if (pp == true){
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	if(hud_active->render_world) {
@@ -466,6 +516,8 @@ void display() {
 
 	if(settings.multisamples > 0)
 		glEnable(GL_MULTISAMPLE);
+
+	//framebuffer_render();
 }
 
 void init() {
@@ -503,6 +555,156 @@ void init() {
 	weapon_set(false);
 
 	rpc_init();
+
+
+
+	framebuffer_init();
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
+#ifdef OPENGL_ES
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+#else
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+#endif
+	glClearDepth(1.0F);
+	glDepthFunc(GL_LEQUAL);
+	glShadeModel(GL_SMOOTH);
+	glDisable(GL_FOG);
+}
+
+void framebuffer_render(){
+	//bind the default framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	//draw the framebuffer rectangle
+	glUseProgram(framebufferProgram);
+	glBindVertexArray(rectVAO);
+	glDisable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+	glUniform1i(glGetUniformLocation(framebufferProgram, "screenTexture"), 0);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	//
+}
+
+void framebuffer_init(){
+	//set up shader program
+	//Shader frameBufferProgram("framebuffer.vert", "framebuffer.frag");
+
+	width = settings.window_width;
+	height = settings.window_height;
+
+	//setup the framebuffer rectangle
+	glGenVertexArrays(1, &rectVAO);
+	glGenBuffers(1, &rectVBO);
+	glBindVertexArray(rectVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), &rectangleVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	//init post processing stuff
+
+	//create frame buffer object
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	/*
+	//create framebuffer texture
+	glGenTextures(1, &framebufferTexture);
+	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+	//create render buffer object
+	glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+	
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		log_info(" -- FRAMEBUFFER NOT COMPLETE");
+	else{
+		log_info(" -- framebuffer is complete");
+	}
+
+	//shader
+	if (framebufferProgram < 0){
+		log_info("compiling framebuffer shader");
+		framebufferProgram
+			= glx_shader(
+			//vertex
+			"#version 330 core\n"
+			"layout (location = 0) in vec2 inPos;\n"
+			"layout (location = 1) in vec2 inTexCoords;\n"
+
+			"out vec2 texCoords;\n"
+
+			"void main(void) {\n"
+			"	gl_Position = vec4(inPos.x, inPos.y, 0.0, 1.0);\n"
+			"	texCoords = inTexcoords;\n"
+			"}\n",
+
+			//fragment
+			"#version 330 core\n"
+			"out vec4 FragColor;\n"
+			"in vec2 texCoords;\n"
+			
+			"uniform sampler2D screenTexture;\n"
+			
+			"const float offset_x = 1.0f / 800.0f;\n"
+			"const float offset_y = 1.0f / 800.0f;\n"  
+			
+			"vec2 offsets[9] = vec2[]\n"
+			"(\n"
+			"	vec2(-offset_x,  offset_y), vec2( 0.0f,    offset_y), vec2( offset_x,  offset_y),\n"
+			"	vec2(-offset_x,  0.0f),     vec2( 0.0f,    0.0f),     vec2( offset_x,  0.0f),\n"
+			"	vec2(-offset_x, -offset_y), vec2( 0.0f,   -offset_y), vec2( offset_x, -offset_y)\n"
+			");\n"
+			
+			"float kernel[9] = float[]\n"
+			"(\n"
+			"	1,  1, 1,\n"
+			"	1, -8, 1,\n"
+			"	1,  1, 1\n"
+			");\n"
+			
+			"void main()\n"
+			"{\n"
+			"	vec3 color = vec3(0.0f);\n"
+			"	for(int i = 0; i < 9; i++)\n"
+			"		color += vec3(texture(screenTexture, texCoords.st + offsets[i])) * kernel[i];\n"
+			"	FragColor = vec4(color, 1.0f);\n"
+			//"	FragColor = vec4(texture(screenTexture, texCoords.st), 1.0f);\n"
+			"	FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+			"}\n");
+		
+		if (framebufferProgram == 0){ //this doesnt work
+			log_info("oh no the framebuffer shader didn't compile");
+		}
+		else{
+			log_info("the framebuffer shader compiled");
+		}
+	}
+
+	glUniform1i(glGetUniformLocation(framebufferProgram, "screenTexture"), 0);
+
+	log_info("finished init framebuffer");
+	*/
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void reshape(struct window_instance* window, int width, int height) {

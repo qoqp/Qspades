@@ -29,5 +29,7 @@ void mouse_click(struct window_instance* window, int button, int action, int mod
 void mouse(struct window_instance* window, double x, double y);
 void mouse_scroll(struct window_instance* window, double xoffset, double yoffset);
 void on_error(int i, const char* s);
+void framebuffer_init();
+void framebuffer_render();
 
 #endif
