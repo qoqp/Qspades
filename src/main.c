@@ -698,10 +698,10 @@ void framebuffer_init(){
 			"const float offset_x = 1.0f / 800.0f;\n"
 			"const float offset_y = 1.0f / 800.0f;\n" 
 			
-			"const float brightness = 1.0f\n"
-			"const float contrast = 1.0f\n"
-			"const float saturation = 1.0f\n"
-			"const float sharpness = 1.0f\n"
+			"const float brightness = 1.0f;\n"
+			"const float contrast = 1.0f;\n"
+			"const float saturation = 1.0f;\n"
+			"const float sharpness = 1.0f;\n"
 			
 			"vec2 offsets[9] = vec2[]\n"
 			"(\n"
