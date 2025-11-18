@@ -675,60 +675,6 @@ void framebuffer_init(){
 	if (framebufferProgram < 0){
 		log_info("compiling framebuffer shader");
 		framebufferProgram = glx_shader_from_file("shaders/framebuffer.vert", "shaders/framebuffer.frag");
-		/*
-		framebufferProgram
-			= glx_shader(
-			//vertex
-			"#version 330 core\n"
-			"layout (location = 0) in vec2 inPos;\n"
-			"layout (location = 1) in vec2 inTexCoords;\n"
-
-			"out vec2 texCoords;\n"
-
-			"void main(void) {\n"
-			"	gl_Position = vec4(inPos.x, inPos.y, 0.0, 1.0);\n"
-			"	texCoords = inTexCoords;\n"
-			"}\n",
-
-			//fragment
-			"#version 330 core\n"
-			"out vec4 FragColor;\n"
-			"in vec2 texCoords;\n"
-			
-			"uniform sampler2D screenTexture;\n"
-			
-			"const float offset_x = 1.0f / 800.0f;\n"
-			"const float offset_y = 1.0f / 800.0f;\n" 
-			
-			"const float brightness = 1.0f;\n"
-			"const float contrast = 1.0f;\n"
-			"const float saturation = 1.0f;\n"
-			"const float sharpness = 1.0f;\n"
-			
-			"vec2 offsets[9] = vec2[]\n"
-			"(\n"
-			"	vec2(-offset_x,  offset_y), vec2( 0.0f,    offset_y), vec2( offset_x,  offset_y),\n"
-			"	vec2(-offset_x,  0.0f),     vec2( 0.0f,    0.0f),     vec2( offset_x,  0.0f),\n"
-			"	vec2(-offset_x, -offset_y), vec2( 0.0f,   -offset_y), vec2( offset_x, -offset_y)\n"
-			");\n"
-			
-			"float kernel[9] = float[]\n"
-			"(\n"
-			"	1,  1, 1,\n"
-			"	1, -8, 1,\n"
-			"	1,  1, 1\n"
-			");\n"
-			
-			"void main()\n"
-			"{\n"
-			"	vec3 color = vec3(0.0f);\n"
-			"	for(int i = 0; i < 9; i++)\n"
-			"		color += vec3(texture(screenTexture, texCoords.st + offsets[i])) * kernel[i];\n"
-			
-			//"	color = texture(screenTexture, texCoords.st).rgb;\n"
-			"	FragColor = vec4(color, 1.0f);\n"
-			//"	FragColor = vec4(texCoords[0], texCoords[1], 0.0f, 1.0f);\n"
-			"}\n");*/
 		
 		if (framebufferProgram == 0){ //this doesnt work
 			log_info("oh no the framebuffer shader didn't compile");
