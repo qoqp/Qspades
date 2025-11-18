@@ -46,6 +46,7 @@ enum {
 void glx_init(void);
 
 int glx_shader(const char* vertex, const char* fragment);
+int glx_shader_from_file(const char* vertexPath, const char* fragmentPath);
 
 void glx_enable_sphericalfog(void);
 void glx_disable_sphericalfog(void);

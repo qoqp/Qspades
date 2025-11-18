@@ -674,6 +674,8 @@ void framebuffer_init(){
 	//shader
 	if (framebufferProgram < 0){
 		log_info("compiling framebuffer shader");
+		framebufferProgram = glx_shader_from_file("shaders/framebuffer.vert", "shaders/framebuffer.frag");
+		/*
 		framebufferProgram
 			= glx_shader(
 			//vertex
@@ -726,7 +728,7 @@ void framebuffer_init(){
 			//"	color = texture(screenTexture, texCoords.st).rgb;\n"
 			"	FragColor = vec4(color, 1.0f);\n"
 			//"	FragColor = vec4(texCoords[0], texCoords[1], 0.0f, 1.0f);\n"
-			"}\n");
+			"}\n");*/
 		
 		if (framebufferProgram == 0){ //this doesnt work
 			log_info("oh no the framebuffer shader didn't compile");
@@ -973,6 +975,8 @@ int main(int argc, char** argv) {
 		file_dir_create("screenshots");
 	if(!file_dir_exists("vxl"))
 		file_dir_create("vxl");
+	if(!file_dir_exists("shaders"))
+		file_dir_create("shaders");
 #endif
 
 	log_set_level(LOG_INFO);

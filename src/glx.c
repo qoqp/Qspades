@@ -27,6 +27,7 @@
 #include "matrix.h"
 #include "texture.h"
 #include "glx.h"
+#include "file.h"
 
 // for future opengl-es abstraction layer
 
@@ -75,6 +76,10 @@ int glx_shader(const char* vertex, const char* fragment) {
 #else
 	return 0;
 #endif
+}
+
+int glx_shader_from_file(const char* vertexPath, const char* fragmentPath){
+	return glx_shader(file_load(vertexPath), file_load(fragmentPath));
 }
 
 void glx_displaylist_create(struct glx_displaylist* x, bool has_color, bool has_normal) {
